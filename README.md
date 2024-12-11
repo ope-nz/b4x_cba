@@ -22,7 +22,7 @@ b4x_cba returns a 1 exit statement to B4X which stops the app launching. This is
 
 NOTE: You should run this action last as it stops any further actions running.
 
-## copyto
+## copyjar
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -directory D:\Temp`
 
@@ -38,7 +38,7 @@ or
 
 b4x_cba will create a file called build.txt in the Files directory of your project with the current date/time. If you omit the date/time formats they will default to yyyy-MM-dd HH:mm:ss.
 
-Remember to sync the files after the first run.
+NOTE: Remember to sync the files after the first run.
 
 ## updateversion
 
@@ -46,4 +46,4 @@ Remember to sync the files after the first run.
 
 b4x_cba will create a file called version.txt in the Files directory of your project with an incrementing version number in format 0.0.0-9.9.9
 
-Remember to sync the files after the first run.
+NOTE: Remember to sync the files after the first run.
