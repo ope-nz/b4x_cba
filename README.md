@@ -20,6 +20,8 @@ e.g. `#CustomBuildAction: 2, D:\Dropbox\My b4x_cba.exe, -action compileonly`
 
 b4x_cba returns a 1 exit statement to B4X which stops the app launching. This is useful for release build when you just want to compile.
 
+NOTE: You should run this action last as it stops any further actions running.
+
 ## copyto
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -directory D:\Temp`
