@@ -80,3 +80,7 @@ or
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action zip -source src -destination D:\Temp`
 
+or
+
+`#CustomBuildAction: 2, b4x_cba.exe, -action zip -source Files -destination D:\Temp`
+
