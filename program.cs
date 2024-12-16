@@ -15,7 +15,7 @@ namespace B4XCustomActions
 		{
 			try
 			{
-				string ThisLocation = Directory.GetCurrentDirectory();
+				//string ThisLocation = Directory.GetCurrentDirectory();
 
 				//Console.WriteLine(ThisLocation);
 				//Console.WriteLine(args.ToString());
@@ -74,23 +74,23 @@ namespace B4XCustomActions
 						break;
 					case "copyjar":
 						Console.WriteLine("Copy Jar");
-						CopyJar(ThisLocation, TDirectory);
+						CopyJar(TDirectory);
 						break;
 					case "copy":
 						Console.WriteLine("Copy");
-						CopyPath(ThisLocation, TSource, TDestination);
+						CopyPath(TSource, TDestination);
 						break;
 					case "buildtime":
 						Console.WriteLine("Build Time");
-						BuildTime(ThisLocation, TDateFormat, TTimeFormat);
+						BuildTime(TDateFormat, TTimeFormat);
 						break;
 					case "updateversion":
 						Console.WriteLine("Update Version");
-						UpdateVersion(ThisLocation);
+						UpdateVersion();
 						break;
 					case "zip":
 						Console.WriteLine("Zip");
-						Zip(ThisLocation, TSource, TDestination);
+						Zip(TSource, TDestination);
 						break;
 					default:
 						Console.WriteLine("No action supplied");
@@ -104,14 +104,14 @@ namespace B4XCustomActions
 			}
 		}
 
-		private static void CopyJar(string BaseDirectory, string TargetDirectory)
+		private static void CopyJar(string TargetDirectory)
 		{
 			try
 			{
-				String jar = FindJar(BaseDirectory);
+				String jar = FindJar();
 				if (jar != null)
 				{
-					File.Copy(Path.Combine(BaseDirectory, jar), Path.Combine(TargetDirectory, jar), overwrite: true);
+					File.Copy(Path.Combine(GetObjectsFolder(), jar), Path.Combine(TargetDirectory, jar), overwrite: true);
 				}
 				Environment.Exit(0);
 			}
@@ -122,7 +122,7 @@ namespace B4XCustomActions
 			}
 		}
 
-		private static void BuildTime(string BaseDirectory, string DateFormat, string TimeFormat)
+		private static void BuildTime(string DateFormat, string TimeFormat)
 		{
 			// Define the desired format for the DateTime string
 			string dateFormat = DateFormat + " " + TimeFormat;
@@ -132,8 +132,7 @@ namespace B4XCustomActions
 
 			try
 			{
-				string TargetFile = Path.GetDirectoryName(BaseDirectory);
-				TargetFile = Path.Combine(TargetFile, "Files\\build.txt");
+				string TargetFile = Path.Combine(GetFilesFolder(), "build.txt");
 				File.WriteAllText(TargetFile, dateTimeString);
 				Environment.Exit(0);
 			}
@@ -144,12 +143,11 @@ namespace B4XCustomActions
 			}
 		}
 
-		private static void UpdateVersion(string BaseDirectory)
+		private static void UpdateVersion()
 		{
 			try
 			{
-				string TargetFile = Path.GetDirectoryName(BaseDirectory);
-				TargetFile = Path.Combine(TargetFile, "Files\\version.txt");
+				string TargetFile = Path.Combine(GetFilesFolder(), "version.txt");
 
 				// Default version
 				string version = "0.0.1";
@@ -194,13 +192,16 @@ namespace B4XCustomActions
 			}
 		}
 
-		public static void CopyPath(string BaseDirectory, string sourcePath, string destinationPath)
+		public static void CopyPath(string sourcePath, string destinationPath)
 		{
 			try
 			{
+				if (sourcePath.StartsWith("Files")) sourcePath = Path.Combine(GetFilesFolder(),sourcePath.Substring(5));
+				if (destinationPath.StartsWith("Files")) destinationPath = Path.Combine(GetFilesFolder(),destinationPath.Substring(5));
+
 				if (!sourcePath.Contains(":"))
 				{
-					sourcePath = Path.Combine(BaseDirectory, sourcePath);
+					sourcePath = Path.Combine(GetObjectsFolder(), sourcePath);
 				}
 
 				bool isDirectory = Directory.Exists(sourcePath);
@@ -239,12 +240,15 @@ namespace B4XCustomActions
 			}
 		}
 
-		private static void Zip(string BaseDirectory, string sourcePath, string destinationPath)
+		private static void Zip(string sourcePath, string destinationPath)
 		{
 			try
 			{
+				if (sourcePath.StartsWith("Files")) sourcePath = Path.Combine(GetFilesFolder(),sourcePath.Substring(5));
+				if (destinationPath.StartsWith("Files")) destinationPath = Path.Combine(GetFilesFolder(),destinationPath.Substring(5));
+
 				// If no drive then assume its a relative path, append base directory
-				if (!sourcePath.Contains(":")) sourcePath = Path.Combine(BaseDirectory, sourcePath);
+				if (!sourcePath.Contains(":")) sourcePath = Path.Combine(GetObjectsFolder(), sourcePath);
 
 				string zipFilePath = "";
 
@@ -298,13 +302,24 @@ namespace B4XCustomActions
 			}
 		}
 
-		private static String FindJar(string BaseDirectory)
+		private static String FindJar()
 		{
 			// Search for .jar files in the directory
-			string[] jarFiles = Directory.GetFiles(BaseDirectory, "*.jar");
+			string[] jarFiles = Directory.GetFiles(GetObjectsFolder(), "*.jar");
 
 			// Return the first .jar filename if found, otherwise return null
 			return jarFiles.Length > 0 ? Path.GetFileName(jarFiles[0]) : null;
+		}
+
+		private static string GetFilesFolder()
+		{
+			string Files = Path.GetDirectoryName(GetObjectsFolder());
+			return Path.Combine(Files, "Files");
+		}
+
+		private static string GetObjectsFolder()
+		{
+			return Directory.GetCurrentDirectory();
 		}
 
 		private static void CopyFile(string sourceFile, string destinationFile)
