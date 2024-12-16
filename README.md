@@ -11,7 +11,11 @@ This is a C# console application that can be used by B4X for custom build action
 
 In your custom actions section call b4x_cba.exe with an action and other parameters
 
-e.g. `#CustomBuildAction: 2, D:\Dropbox\My b4x_cba.exe, -action compileonly`
+e.g. `#CustomBuildAction: 2, b4x_cba.exe, -action compileonly`
+
+Alternatively as an ide link
+
+e.g. `'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion`
 
 # Usage and Supported actions;
 ## compileonly
