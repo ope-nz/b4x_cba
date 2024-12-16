@@ -26,6 +26,8 @@ NOTE: You should run this action last as it stops any further actions running.
 
 b4x_cba will copy a file or folder from the source to the destination directory. "Files" can be used as a shortcut to the assets folder.
 
+NOTE: Remember to sync the files if you are copying to the Files folder.
+
 `#CustomBuildAction: 2, b4x_cba.exe, -action copy --source ObfuscatorMap.txt -destination D:\Temp`
 
 or
