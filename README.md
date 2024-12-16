@@ -66,7 +66,7 @@ NOTE: Remember to sync the files after the first run.
 
 or
 
-`'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action+updateversion`
+`'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion`
 
 ## zip
 
