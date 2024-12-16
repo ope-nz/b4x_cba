@@ -64,6 +64,10 @@ NOTE: Remember to sync the files after the first run.
 
 `#CustomBuildAction: folders ready, b4x_cba.exe, -action updateversion`
 
+or
+
+`'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action+updateversion`
+
 ## zip
 
 b4x_cba will zip a file or folder from the source to the destination. "Files" can be used as a shortcut to the assets folder. If the source is a file and destination filename is ommitted then the filename will be used but with a .zip extension.
