@@ -4,7 +4,7 @@ This is a C# console application that can be used by B4X for custom build action
 
 # Setup;
 
-1. Copy b4x_cba.exe to your B4X install folder eg C:\Apps\B4J
+1. Copy b4x_cba.exe to your B4X install folder eg C:\Program Files\Anywhere Software\B4J
 2. Set up some custom build actions in your project
 
 # Usage
