@@ -32,11 +32,11 @@ b4x_cba will copy a file or folder from the source to the destination directory.
 
 NOTE: Remember to sync the files if you are copying to the Files folder.
 
-`#CustomBuildAction: 2, b4x_cba.exe, -action copy --source ObfuscatorMap.txt -destination D:\Temp`
+`#CustomBuildAction: 2, b4x_cba.exe, -action copy -source ObfuscatorMap.txt -destination D:\Temp`
 
 or
 
-`#CustomBuildAction: 2, b4x_cba.exe, -action copy --source src -destination D:\Temp`
+`#CustomBuildAction: 2, b4x_cba.exe, -action copy -source src -destination D:\Temp`
 
 or
 
@@ -44,9 +44,9 @@ or
 
 ## copyjar
 
-b4x_cba will copy the output jar to the specified directory
+b4x_cba will copy the output jar to the specified destination directory
 
-`#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -directory D:\Temp`
+`#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -destination D:\Temp`
 
 ## buildtime
 
