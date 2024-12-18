@@ -1,6 +1,6 @@
 # B4X Custom Build Action (b4x_cba)
 
-This is a C# console application that can be used by B4X for custom build actions.
+b4x_cba is a C# console application that contains a collection of utility actions that can be executed as custom build actions or ide links in B4X.
 
 # Setup;
 
