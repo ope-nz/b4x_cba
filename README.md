@@ -44,7 +44,9 @@ or
 
 ## copyjar
 
-b4x_cba will copy the output jar to the specified destination directory
+b4x_cba will copy the output jar to the specified destination directory.
+
+NOTE: In the first release the second argument was named "directory" this has been changed to "destination" for consistency.
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -destination D:\Temp`
 
