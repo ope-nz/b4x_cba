@@ -19,7 +19,7 @@ namespace B4XCustomActions
 			try
 			{
 				// If the argument is a string, split it into an array of strings
-				if (args.Length == 1 && args[0].Contains(" ")) args = args[0].Split(' ');				
+				if (args.Length == 1 && args[0].Contains(" ")) args = args[0].Split(' ');
 
 				int c = args.GetUpperBound(0);
 
@@ -172,8 +172,12 @@ namespace B4XCustomActions
 		private static void UpdateVersion()
 		{
 			// Default version
-			string version = "0.0.1";
+			string version = "0.0.0";
 			string TargetFile = Path.Combine(GetFilesFolder(), "version.txt");
+
+			int major = 0;
+			int minor = 0;
+			int build = 0;
 
 			try
 			{
@@ -182,29 +186,34 @@ namespace B4XCustomActions
 					// Read the current version from the file
 					version = File.ReadAllText(TargetFile).Trim();
 
+					int dotCount = 0;
+					foreach (char c in version){if (c == '.') dotCount++;}
+
+					if (version.Length == 0 || dotCount != 2) version = "0.0.0";
+
 					// Split the version into major, minor, and build
 					var versionParts = version.Split('.');
 
-					int major = int.Parse(versionParts[0]);
-					int minor = int.Parse(versionParts[1]);
-					int build = int.Parse(versionParts[2]);
-
-					// Increment the build, and check if it exceeds 9
-					build++;
-					if (build > 9)
-					{
-						build = 0;
-						minor++;
-						if (minor > 9)
-						{
-							minor = 0;
-							major++;
-						}
-					}
-
-					// Construct the new version
-					version = major + "." + minor + "." + build;
+					major = int.Parse(versionParts[0]);
+					minor = int.Parse(versionParts[1]);
+					build = int.Parse(versionParts[2]);
 				}
+
+				// Increment the build, and check if it exceeds 9
+				build++;
+				if (build > 9)
+				{
+					build = 0;
+					minor++;
+					if (minor > 9)
+					{
+						minor = 0;
+						major++;
+					}
+				}
+
+				// Construct the new version
+				version = major + "." + minor + "." + build;
 
 				Console.WriteLine("Incrementing version to " + version);
 
