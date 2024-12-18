@@ -98,3 +98,14 @@ or
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action zip -source Files -destination D:\Temp`
 
+##moveautobackups
+
+b4x_cba will move all auto backup files from the projects "AutoBackups" folder to another location.
+
+NOTE: The destination is a directory but the tool will create a sub folder with the project name eg if you use D:\Temp the backups will be moved to D:\Temp\ProjectName
+
+`#CustomBuildAction: 2, b4x_cba.exe, -action moveautobackups -destination D:\Temp`
+
+or
+
+`'Ctrl + click to move autobackups: ide://run?File=b4x_cba.exe&Args=-action&Args=moveautobackups&Args=-destination&Args=D:\Temp`
