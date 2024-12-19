@@ -32,7 +32,8 @@ Alternatively as an ide link
 
 b4x_cba returns a 1 exit statement to B4X which stops the app launching. This is useful for release build when you just want to compile.
 
-NOTE: You should run this action last as it stops any further actions running.
+> [!NOTE]
+> You should run this action last as it stops any further actions running.
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action compileonly`
 
@@ -40,7 +41,8 @@ NOTE: You should run this action last as it stops any further actions running.
 
 b4x_cba will copy a file or folder from the source to the destination directory. "Files" can be used as a shortcut to the assets folder.
 
-NOTE: Remember to sync the files if you are copying to the Files folder (to remove warning #17).
+> [!NOTE]
+> Remember to sync the files if you are copying to the Files folder (to remove warning #17).
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action copy -source ObfuscatorMap.txt -destination D:\Temp`
 
@@ -56,7 +58,8 @@ or
 
 b4x_cba will copy the output jar to the specified destination directory.
 
-NOTE: In the first release the second argument was named "directory" this has been changed to "destination" for consistency.
+> [!NOTE]
+> In the first release the second argument was named "directory" this has been changed to "destination" for consistency.
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -destination D:\Temp`
 
@@ -64,9 +67,11 @@ NOTE: In the first release the second argument was named "directory" this has be
 
 b4x_cba will create a file named "build.txt" in the Files directory of your project with the current date/time. If you omit the date/time formats they will default to yyyy-MM-dd HH:mm:ss.
 
-NOTE: The file "build.txt" does not need to exist before running.
+> [!NOTE]
+> The file "build.txt" does not need to exist before running.
 
-NOTE: Remember to sync the files after the first run (to remove warning #17).
+> [!NOTE]
+> Remember to sync the files after the first run (to remove warning #17).
 
 `#CustomBuildAction: folders ready, b4x_cba.exe, -action buildtime`
 
@@ -78,9 +83,11 @@ or
 
 b4x_cba will create a file named "version.txt" in the Files directory of your project with an incrementing version number in format 0.0.0-9.9.9.
 
-NOTE: The file "version.txt" does not need to exist before running.
+> [!NOTE]
+> The file "version.txt" does not need to exist before running.
 
-NOTE: Remember to sync the files after the first run (to remove warning #17).
+> [!NOTE]
+> Remember to sync the files after the first run (to remove warning #17).
 
 `#CustomBuildAction: folders ready, b4x_cba.exe, -action updateversion`
 
@@ -114,7 +121,8 @@ or
 
 b4x_cba will move all auto backup files from the projects "AutoBackups" folder to another location.
 
-NOTE: The destination is a directory but the tool will create a sub folder with the project name eg if you use D:\Temp the backups will be moved to D:\Temp\ProjectName
+> [!NOTE]
+> The destination is a directory but the tool will create a sub folder with the project name eg if you use D:\Temp the backups will be moved to D:\Temp\ProjectName
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action moveautobackups -destination D:\Temp`
 
