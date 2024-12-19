@@ -8,7 +8,7 @@ b4x_cba is a C# console application that contains a collection of utility action
 - copy - copy files or folder
 - copyjar - copys the output jar to another directory
 - buildtime - creates a file named build.txt with the build time
-- updateversion - maintains a version.txt file with increment version number
+- updateversion - maintains a version.txt file with incrementing version number
 - zip - zips a file or folder
 - moveautobackups - moves auto backup files to another directory
 
