@@ -69,8 +69,6 @@ b4x_cba will create a file named "build.txt" in the Files directory of your proj
 
 > [!NOTE]
 > The file "build.txt" does not need to exist before running.
-
-> [!NOTE]
 > Remember to sync the files after the first run (to remove warning #17).
 
 `#CustomBuildAction: folders ready, b4x_cba.exe, -action buildtime`
@@ -85,8 +83,6 @@ b4x_cba will create a file named "version.txt" in the Files directory of your pr
 
 > [!NOTE]
 > The file "version.txt" does not need to exist before running.
-
-> [!NOTE]
 > Remember to sync the files after the first run (to remove warning #17).
 
 `#CustomBuildAction: folders ready, b4x_cba.exe, -action updateversion`
