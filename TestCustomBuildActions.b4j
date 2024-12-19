@@ -1,0 +1,53 @@
+'Non-UI application (console / server application)
+#Region Project Attributes 
+	#CommandLineArgs:
+	#MergeLibraries: True		
+	
+	'NOTE: it is assumed b4x_cba.exe is in the B4X install folder or somewhere in your path eg %WINDIR%\System32\b4x_cba.exe	
+	
+	'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion	
+	'Ctrl + click to move autobackups: ide://run?File=b4x_cba.exe&Args=-action&Args=moveautobackups&Args=-destination&Args=D:\Temp	
+		
+	' Update build time
+	' NOTE: You should do this every Run/Compile so that the build time is always up to date
+	#CustomBuildAction: folders ready, b4x_cba.exe, -action buildtime -dateformat dd/MM/yyyy -timeformat HH:mm:ss	
+	
+	' Copy a file to the Assets (Files) folder
+	#CustomBuildAction: folders ready, b4x_cba.exe, -action copy -source D:\Temp\index.html -destination Files
+	
+	#if RELEASE
+		' Increment the version in "Files\version.txt"
+		#CustomBuildAction: folders ready, b4x_cba.exe, -action updateversion
+		
+		' Copy the output jar to another folder
+		#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -destination D:\Temp	
+		
+		' Copy a file to another folder
+		#CustomBuildAction: 2, b4x_cba.exe, -action copy -source ObfuscatorMap.txt -destination D:\Temp
+		
+		' Copy a folder to another location 
+		#CustomBuildAction: 2, b4x_cba.exe, -action copy -source src -destination D:\Temp
+		
+		' Zip a file or folder (lots of example of files and folders)
+		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source ObfuscatorMap.txt -destination D:\Temp
+		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source ObfuscatorMap.txt -destination D:\Temp\Cool.zip
+		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source src -destination D:\Temp\BackupSrc.zip
+		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source src -destination D:\Temp
+		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source Files -destination D:\Temp\BackupFiles.zip		
+		
+		' Execute compile only to stop app execution in RELEASE mode
+		' NOTE: Always do this last as it returns a error that stops jar launching		
+		#CustomBuildAction: 2, b4x_cba.exe, -action compileonly
+	#end if
+	
+#End Region
+
+Sub Process_Globals
+	
+End Sub
+
+Sub AppStart (Args() As String)
+	Log("Hello world!!!")
+	Log("Build = "&File.ReadString(File.DirAssets,"build.txt"))
+	Log("Version = "&File.ReadString(File.DirAssets,"version.txt"))
+End Sub
