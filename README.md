@@ -2,6 +2,16 @@
 
 b4x_cba is a C# console application that contains a collection of utility actions that can be executed as custom build actions or ide links in B4X.
 
+# Supported Actions
+
+- compileonly - returns an error to stop b4x launching the release version of your app (always run last)
+- copy - copy files or folder
+- copyjar - copys the output jar to another directory
+- buildtime - creates a file named build.txt with the build time
+- updateversion - maintains a version.txt file with increment version number
+- zip - zips a file or folder
+- moveautobackups - moves auto backup files to another directory
+
 # Setup;
 
 1. Copy b4x_cba.exe to your B4X install folder eg C:\Program Files\Anywhere Software\B4J
@@ -9,13 +19,13 @@ b4x_cba is a C# console application that contains a collection of utility action
 
 # Usage
 
-In your custom actions section call b4x_cba.exe with an action and other parameters
+In your custom actions section call b4x_cba.exe with an action and other required parameters
 
-e.g. `#CustomBuildAction: 2, b4x_cba.exe, -action compileonly`
+`#CustomBuildAction: 2, b4x_cba.exe, -action compileonly`
 
 Alternatively as an ide link
 
-e.g. `'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion`
+`'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion`
 
 # Usage and Supported actions;
 ## compileonly
