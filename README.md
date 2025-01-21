@@ -11,6 +11,8 @@ b4x_cba is a C# console application that contains a collection of utility action
 - updateversion - maintains a version.txt file with incrementing version number
 - zip - zips a file or folder
 - moveautobackups - moves auto backup files to another directory
+- checksum - writes a SHA256 checksum of the jar file to a text file
+- githubpush - pushes the project code to a GitHub repo
 
 # Setup;
 
@@ -127,3 +129,30 @@ b4x_cba will move all auto backup files from the projects "AutoBackups" folder t
 or
 
 `'Ctrl + click to move autobackups: ide://run?File=b4x_cba.exe&Args=-action&Args=moveautobackups&Args=-destination&Args=D:\Temp`
+
+## checksum
+
+b4x_cba will calulate a SHA256 checksum of the output jar file and write it to a text file
+
+> [!NOTE]
+> If the destination is a folder then the jar name will be used for the checksum eg example.jar will result in example_checksum.txt
+
+`#CustomBuildAction: 2, b4x_cba.exe, -action checksum -destination D:\Release`
+
+or
+
+`#CustomBuildAction: 2, b4x_cba.exe, -action checksum -destination D:\Temp\checksum.txt`
+
+## githubpush
+
+b4x_cba will push the project to a GitHub repository.
+
+`Ctrl + click to push to GitHub: ide://run?File=b4x_cba.exe&Args=-action&Args=githubpush`
+
+> [!NOTE]
+> This action uses GitHub REST so it doesnt require any other software
+> It uses an API key for authetication
+> You need to add config to the project attributes region of your project eg
+> 'github_repository_owner=ope-nz
+> 'github_repository_name=deleteme
+> 'github_branch=dev
