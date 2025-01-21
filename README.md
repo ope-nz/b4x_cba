@@ -29,6 +29,17 @@ Alternatively as an ide link
 
 `'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion`
 
+# Variables
+
+The following variables are available when using b4x_cba.exe
+
+- %JAR% - the full name of the jar file eg "Example.jar"
+- %JAR_NAME% -  just the name of the jar file eg "Example"
+- %VERSION% - the version number from version.txt eg 1.0.5
+- %PROJECT_NAME% - the project name eg TestCurstomCommands
+- %DATE% - a date string in format yyyyMMdd
+- %TIME% - a time string in format HHmmss  
+
 # Usage and Supported actions;
 ## compileonly
 
