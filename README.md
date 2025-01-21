@@ -152,7 +152,7 @@ b4x_cba will push the project to a GitHub repository.
 > [!NOTE]
 > This action uses GitHub REST so it doesnt require any other software
 > 
-> It uses an API key for authetication
+> It uses an API key for authentication. You will be prompted for API key on first run and the API key is stored in same location as b4x_cba.exe
 > 
 > You need to add config to the project attributes region of your project eg
 > 
