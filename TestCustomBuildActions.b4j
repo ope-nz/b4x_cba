@@ -1,14 +1,63 @@
 'Non-UI application (console / server application)
 #Region Project Attributes 
 	#CommandLineArgs:
-	#MergeLibraries: True		
+	#MergeLibraries: True
 	
-	'NOTE: it is assumed b4x_cba.exe is in the B4X install folder or somewhere in your path eg %WINDIR%\System32\b4x_cba.exe	
+	'###################################################################################
+	'NOTE: it is assumed b4x_cba.exe is in either;
+	' 1. The B4X install folder eg C:\Program Files\Anywhere Software\B4J
+	' or
+	' 2. In your system path eg %WINDIR%\System32\b4x_cba.exe
+	'###################################################################################
 	
-	'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion	
+	'###################################################################################
+	' Variables
+	'###################################################################################
+	' %JAR% - the full name of the jar file eg "Example.jar"
+	' %JAR_NAME% -  justthe name ofthe jar file eg "Example"
+	' %VERSION% - the version number from version.txt eg 1.0.5
+	' %PROJECT_NAME% - the project name eg TestCurstomCommands
+	' %DATE% - a date string in format yyyyMMdd
+	' %TIME% - a time string in format HHmmss  
+	
+	'###################################################################################
+	' GitHub Config for b4x_cba.exe
+	' You will be prompted for API key on first run
+	' API key is stored in same location as b4x_cba.exe
+	' .gitignore & .gitattribute files will automatically be created in project folder
+	'###################################################################################
+	'github_repository_owner=ope-nz
+ 	'github_repository_name=deleteme
+        'github_branch=dev
+
+	'###################################################################################
+	' Example IDE shortcuts
+	'###################################################################################
+	
+	'================================
+	' ACTION = GITHUBPUSH
+	'================================
+	' NOTE: the githubpush action uses the GitHub config above 
+	' Ctrl + click to push to GitHub: ide://run?File=b4x_cba.exe&Args=-action&Args=githubpush	
+		
+	'================================
+	' ACTION = UPDATEVERSION
+	'================================
+	'Ctrl + click to increment project version in "Files\version.txt": ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion	
+	
+	'================================
+	' ACTION = MOVEAUTOBACKUPS
+	'================================
 	'Ctrl + click to move autobackups: ide://run?File=b4x_cba.exe&Args=-action&Args=moveautobackups&Args=-destination&Args=D:\Temp	
 		
-	' Update build time
+	'###################################################################################
+	' Example Custom Build Actions
+	'###################################################################################
+	
+	'================================
+	' ACTION = BUILDTIME
+	'================================
+	' Update the build time in File\build.txt
 	' NOTE: You should do this every Run/Compile so that the build time is always up to date
 	#CustomBuildAction: folders ready, b4x_cba.exe, -action buildtime -dateformat dd/MM/yyyy -timeformat HH:mm:ss	
 	
@@ -16,30 +65,56 @@
 	#CustomBuildAction: folders ready, b4x_cba.exe, -action copy -source D:\Temp\index.html -destination Files
 	
 	#if RELEASE
-		' Increment the version in "Files\version.txt"
+		'================================
+	    ' ACTION = UPDATEVERSION
+		'================================
+		' Increment the project version in "Files\version.txt"
 		#CustomBuildAction: folders ready, b4x_cba.exe, -action updateversion
 		
+		'================================
+		' ACTION = COPYJAR
+		'================================
 		' Copy the output jar to another folder
-		#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -destination D:\Temp	
+		#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -destination D:\Temp		
+		' OR copy the output jar to another folder (but change file name)
+		#CustomBuildAction: 2, b4x_cba.exe, -action copyjar -destination D:\Temp\%JAR_NAME%.%VERSION%
+		' OR use copy instead
+		#CustomBuildAction: 2, b4x_cba.exe, -action copy -source %JAR% -destination D:\Temp		
 		
+		'================================
+		' ACTION = COPY
+		'================================
 		' Copy a file to another folder
-		#CustomBuildAction: 2, b4x_cba.exe, -action copy -source ObfuscatorMap.txt -destination D:\Temp
+		#CustomBuildAction: 2, b4x_cba.exe, -action copy -source ObfuscatorMap.txt -destination D:\Temp\ObfuscatorMap_%VERSION%.txt
 		
 		' Copy a folder to another location 
-		#CustomBuildAction: 2, b4x_cba.exe, -action copy -source src -destination D:\Temp
+		#CustomBuildAction: 2, b4x_cba.exe, -action copy -source src -destination D:\Temp\%PROJECT_NAME%_%VERSION%
 		
-		' Zip a file or folder (lots of example of files and folders)
+		'================================
+		' ACTION = ZIP
+		'================================
+		' Zip a file or folder (lots of examples of files and folders)
 		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source ObfuscatorMap.txt -destination D:\Temp
-		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source ObfuscatorMap.txt -destination D:\Temp\Cool.zip
+		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source ObfuscatorMap.txt -destination D:\Temp\ObfuscatorMap.zip
 		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source src -destination D:\Temp\BackupSrc.zip
 		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source src -destination D:\Temp
-		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source Files -destination D:\Temp\BackupFiles.zip		
+		#CustomBuildAction: 2, b4x_cba.exe, -action zip -source Files -destination D:\Temp\BackupFiles_%DATE%.zip		
 		
+		'================================
+		' ACTION = CHECKSUM
+		'================================
+		' Write a SHA256 checksum of the jar file to a text file (eg jar is example.jar then checksum is example_checksum.txt)
+		#CustomBuildAction: 2, b4x_cba.exe, -action jarchecksum -destination D:\Release
+		' OR Write a SHA256 checksum to a named file (eg mychecksum.txt)
+		#CustomBuildAction: 2, b4x_cba.exe, -action jarchecksum -destination D:\Release\mychecksum.txt
+		
+		'================================
+		' ACTION = COMPILEONLY
+		'================================
 		' Execute compile only to stop app execution in RELEASE mode
-		' NOTE: Always do this last as it returns a error that stops jar launching		
+		' NOTE: Always do this last as it returns a error that stops jar launching
 		#CustomBuildAction: 2, b4x_cba.exe, -action compileonly
-	#end if
-	
+	#end if	
 #End Region
 
 Sub Process_Globals
