@@ -41,6 +41,10 @@ The following variables are available when using b4x_cba.exe
 - %TIME% - a time string in format HHmmss  
 
 # Usage and Supported actions;
+
+> [!NOTE]
+> See the TestCustomCommands.b4j file for more examples
+
 ## compileonly
 
 b4x_cba returns a 1 exit statement to B4X which stops the app launching. This is useful for release build when you just want to compile.
@@ -58,14 +62,6 @@ b4x_cba will copy a file or folder from the source to the destination directory.
 > Remember to sync the files if you are copying to the Files folder (to remove warning #17).
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action copy -source ObfuscatorMap.txt -destination D:\Temp`
-
-or
-
-`#CustomBuildAction: 2, b4x_cba.exe, -action copy -source src -destination D:\Temp`
-
-or
-
-`#CustomBuildAction: folders ready, b4x_cba.exe, -action copy -source D:\Temp\index.html -destination Files`
 
 ## copyjar
 
@@ -87,10 +83,6 @@ b4x_cba will create a file named "build.txt" in the Files directory of your proj
 
 `#CustomBuildAction: folders ready, b4x_cba.exe, -action buildtime`
 
-or
-
-`#CustomBuildAction: folders ready, b4x_cba.exe, -action buildtime -dateformat dd/MM/yyyy -timeformat HH:mm:ss`
-
 ## updateversion
 
 b4x_cba will create a file named "version.txt" in the Files directory of your project with an incrementing version number in format 0.0.0-9.9.9.
@@ -102,31 +94,11 @@ b4x_cba will create a file named "version.txt" in the Files directory of your pr
 
 `#CustomBuildAction: folders ready, b4x_cba.exe, -action updateversion`
 
-or
-
-`'Ctrl + click to increment version: ide://run?File=b4x_cba.exe&Args=-action&Args=updateversion`
-
 ## zip
 
 b4x_cba will zip a file or folder from the source to the destination. "Files" can be used as a shortcut to the assets folder. If the source is a file and destination filename is ommitted then the filename will be used but with a .zip extension.
 
-`#CustomBuildAction: 2, b4x_cba.exe, -action zip -source ObfuscatorMap.txt -destination D:\Temp\`
-
-or
-
-`#CustomBuildAction: 2, b4x_cba.exe, -action zip -source ObfuscatorMap.txt -destination D:\Temp\Cool.zip`
-
-or
-
 `#CustomBuildAction: 2, b4x_cba.exe, -action zip -source src -destination D:\Temp\Backup.zip`
-
-or
-
-`#CustomBuildAction: 2, b4x_cba.exe, -action zip -source src -destination D:\Temp`
-
-or
-
-`#CustomBuildAction: 2, b4x_cba.exe, -action zip -source Files -destination D:\Temp`
 
 ## moveautobackups
 
@@ -137,10 +109,6 @@ b4x_cba will move all auto backup files from the projects "AutoBackups" folder t
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action moveautobackups -destination D:\Temp`
 
-or
-
-`'Ctrl + click to move autobackups: ide://run?File=b4x_cba.exe&Args=-action&Args=moveautobackups&Args=-destination&Args=D:\Temp`
-
 ## checksum
 
 b4x_cba will calulate a SHA256 checksum of the output jar file and write it to a text file
@@ -149,10 +117,6 @@ b4x_cba will calulate a SHA256 checksum of the output jar file and write it to a
 > If the destination is a folder then the jar name will be used for the checksum eg example.jar will result in example_checksum.txt
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action checksum -destination D:\Release`
-
-or
-
-`#CustomBuildAction: 2, b4x_cba.exe, -action checksum -destination D:\Temp\checksum.txt`
 
 ## githubpush
 
