@@ -2,17 +2,20 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Reflection;
-using System.Runtime;
 using System.Text;
+using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace B4XCustomActions
 {
 	class Program
 	{
 		/// <summary>
-		/// Main entry point for the B4XCustomActions library.  This library is intended to be called from the command line
-		/// as a custom step in a B4X project.
+		/// Main entry point for the B4XCustomActions library.
+		/// This library is intended to be called from the command line as a custom step in a B4X project.
 		/// </summary>
 		static void Main(string[] args)
 		{
@@ -28,6 +31,9 @@ namespace B4XCustomActions
 				string TTimeFormat = "HH:mm:ss";
 				string TSource = "";
 				string TDestination = "";
+				string TFind = "";
+				string TReplace = "";
+				string TMessage = "";
 
 				// Loop through arguments
 				for (int n = 0; n < c; n++)
@@ -35,12 +41,16 @@ namespace B4XCustomActions
 					string thisKey = args[n].ToLower().TrimEnd().TrimStart();
 					string thisVal = args[n + 1].TrimEnd().TrimStart();
 
+					if (thisVal.Contains("%")) thisVal = Utils.ResolveVariables(thisVal);
+
 					//Console.WriteLine(thisKey);
 					//Console.WriteLine(thisVal);
 
-					// eval the key or slash-switch option ("/key")
 					switch (thisKey)
 					{
+						case "-echo":
+							TAction = thisVal;
+							break;	
 						case "-action":
 							TAction = thisVal;
 							break;
@@ -56,17 +66,35 @@ namespace B4XCustomActions
 						case "-timeformat":
 							TTimeFormat = thisVal;
 							break;
+						case "-find":
+							TFind = thisVal;
+							break;
+						case "-replace":
+							TReplace = thisVal;
+							break;
+						case "-message":
+							TMessage = thisVal;
+							break;
 					}
 				}
 
+				Console.WriteLine(" ");
 				Console.WriteLine("###############################################################");
-				Console.WriteLine("B4X Custom Action - " + GetProjectName());
+				Console.WriteLine("B4X Custom Action - " + Utils.GetProjectName());
 				Console.WriteLine("###############################################################");
 
 				switch (TAction)
 				{
+					case "echo":
+						if (TMessage.Length > 0) Console.WriteLine(TMessage);
+						Environment.Exit(0);
+						break;
 					case "compileonly":
 						Console.WriteLine("Compile Only");
+						Console.WriteLine(" ");
+						if (TMessage.Length > 0) Console.WriteLine(TMessage);
+						Console.WriteLine("NOTE: this isn't actually an error!");
+						Console.WriteLine(" ");
 						Environment.Exit(1);
 						break;
 					case "copyjar":
@@ -93,6 +121,18 @@ namespace B4XCustomActions
 						Console.WriteLine("Move AutoBackups");
 						MoveAutoBackups(TDestination);
 						break;
+					case "replacetext":
+						Console.WriteLine("Find and Replace Text");
+						FindAndReplaceText(TSource, TFind, TReplace);
+						break;
+					case "githubpush":
+						Console.WriteLine("Github Push");
+						GithubPush();
+						break;
+					case "jarchecksum":
+						Console.WriteLine("SHA256");
+						WriteJarChecksum(TDestination);
+						break;
 					default:
 						Console.WriteLine("No action supplied");
 						break;
@@ -115,13 +155,12 @@ namespace B4XCustomActions
 		{
 			try
 			{
-				String jar = FindJar();
-
-				Console.WriteLine("Copying  " + jar + " to " + destinationPath);
+				String jar = Utils.FindJar();
 
 				if (jar != null)
 				{
-					File.Copy(Path.Combine(GetObjectsFolder(), jar), Path.Combine(destinationPath, jar), overwrite: true);
+					string sourcePath = Path.Combine(Utils.GetObjectsFolder(), jar);
+					CopyPath(sourcePath, destinationPath);
 				}
 				Environment.Exit(0);
 			}
@@ -149,7 +188,7 @@ namespace B4XCustomActions
 
 			try
 			{
-				string TargetFile = Path.Combine(GetFilesFolder(), "build.txt");
+				string TargetFile = Path.Combine(Utils.GetFilesFolder(), "build.txt");
 				File.WriteAllText(TargetFile, dateTimeString);
 				Environment.Exit(0);
 			}
@@ -173,7 +212,7 @@ namespace B4XCustomActions
 		{
 			// Default version
 			string version = "0.0.0";
-			string TargetFile = Path.Combine(GetFilesFolder(), "version.txt");
+			string TargetFile = Path.Combine(Utils.GetFilesFolder(), "version.txt");
 
 			int major = 0;
 			int minor = 0;
@@ -187,7 +226,7 @@ namespace B4XCustomActions
 					version = File.ReadAllText(TargetFile).Trim();
 
 					int dotCount = 0;
-					foreach (char c in version){if (c == '.') dotCount++;}
+					foreach (char c in version) { if (c == '.') dotCount++; }
 
 					if (version.Length == 0 || dotCount != 2) version = "0.0.0";
 
@@ -236,52 +275,66 @@ namespace B4XCustomActions
 			}
 		}
 
+
 		/// <summary>
-		/// Copies the specified source path to the specified destination path.
+		/// Copies a file or directory from a specified source path to a destination path.
 		/// </summary>
-		/// <param name="sourcePath">The source path to copy. Can be a file or a directory. If it is a relative path, it will be resolved relative to the objects folder.</param>
-		/// <param name="destinationPath">The destination path to copy to. If it is a relative path, it will be resolved relative to the files folder.</param>
-		/// <remarks>If a file with the same name already exists in the destination path, it will be overwritten.</remarks>
+		/// <param name="sourcePath">The source path, which can be a file or a directory. 
+		/// If the path is relative, it will be resolved relative to the project folder.</param>
+		/// <param name="destinationPath">The destination path, which can be a directory or a file path. 
+		/// If the path is relative, it will be resolved relative to the project folder.</param>
+		/// <remarks>
+		/// If the source path is a file and the destination path is a directory, the file will be copied into the directory.
+		/// If the source path is a directory and the destination path is a directory, the entire directory will be copied.
+		/// The method will exit the program with a status code of 0 if the copy operation is successful, or 1 if an error occurs.
+		/// </remarks>
 		public static void CopyPath(string sourcePath, string destinationPath)
 		{
 			try
 			{
-				if (sourcePath.StartsWith("Files")) sourcePath = Path.Combine(GetFilesFolder(), sourcePath.Substring(5));
-				if (destinationPath.StartsWith("Files")) destinationPath = Path.Combine(GetFilesFolder(), destinationPath.Substring(5));
+				sourcePath = Utils.ResolvePath(sourcePath);
+				destinationPath = Utils.ResolvePath(destinationPath);
 
-				if (!sourcePath.Contains(":"))
+				bool sourceIsDirectory = Utils.IsDirectoryPath(sourcePath);
+				bool sourceIsFile = Utils.IsFilePath(sourcePath);
+
+				bool desitinationIsDirectory = Utils.IsDirectoryPath(destinationPath);
+				bool desitinationIsFile = Utils.IsFilePath(destinationPath);
+
+				if (sourceIsFile && !File.Exists(sourcePath))
 				{
-					sourcePath = Path.Combine(GetObjectsFolder(), sourcePath);
+					Console.WriteLine("source file not found - " + sourcePath);
+					Environment.Exit(1);
 				}
 
-				bool isDirectory = Directory.Exists(sourcePath);
-				bool isFile = File.Exists(sourcePath);
-
-				if (isFile)
+				if (sourceIsDirectory && !Directory.Exists(sourcePath))
 				{
-					string FileName = Path.GetFileName(sourcePath);
-					if (!destinationPath.Contains(FileName)) destinationPath = Path.Combine(destinationPath, Path.GetFileName(sourcePath));
+					Console.WriteLine("source directory not found - " + sourcePath);
+					Environment.Exit(1);
 				}
 
-				if (isDirectory)
-				{
-					if (!destinationPath.Contains(Path.GetFileName(sourcePath))) destinationPath = Path.Combine(destinationPath, Path.GetFileName(sourcePath));
-				}
-
-				if (File.Exists(sourcePath))
+				if (sourceIsFile && desitinationIsFile)
 				{
 					Console.WriteLine("Copy File " + sourcePath + " to " + destinationPath);
-					CopyFile(sourcePath, destinationPath);
+					Utils.CopyFile(sourcePath, destinationPath);
 					Environment.Exit(0);
 				}
 
-				if (Directory.Exists(sourcePath))
+				if (sourceIsFile && desitinationIsDirectory)
+				{
+					string FileName = Path.GetFileName(sourcePath);
+					destinationPath = Path.Combine(destinationPath, Path.GetFileName(sourcePath));
+					Console.WriteLine("Copy File " + sourcePath + " to " + destinationPath);
+					Utils.CopyFile(sourcePath, destinationPath);
+					Environment.Exit(0);
+				}
+
+				if (sourceIsDirectory && desitinationIsDirectory)
 				{
 					Console.WriteLine("Copy Directory " + sourcePath + " to " + destinationPath);
-					CopyDirectory(sourcePath, destinationPath);
+					Utils.CopyDirectory(sourcePath, destinationPath);
 					Environment.Exit(0);
 				}
-
 			}
 			catch (Exception ex)
 			{
@@ -302,11 +355,8 @@ namespace B4XCustomActions
 		{
 			try
 			{
-				if (sourcePath.StartsWith("Files")) sourcePath = Path.Combine(GetFilesFolder(), sourcePath.Substring(5));
-				if (destinationPath.StartsWith("Files")) destinationPath = Path.Combine(GetFilesFolder(), destinationPath.Substring(5));
-
-				// If no drive then assume its a relative path, append base directory
-				if (!sourcePath.Contains(":")) sourcePath = Path.Combine(GetObjectsFolder(), sourcePath);
+				sourcePath = Utils.ResolvePath(sourcePath);
+				destinationPath = Utils.ResolvePath(destinationPath);
 
 				string zipFilePath = "";
 
@@ -361,88 +411,127 @@ namespace B4XCustomActions
 			}
 		}
 
-		/// <summary>
-		/// Search for .jar files in the directory
-		/// and return the first .jar filename if found, otherwise return null
-		/// </summary>
-		/// <returns>The first .jar filename if found, otherwise null</returns>
-		private static String FindJar()
+        /// <summary>
+        /// Pushes the current project to GitHub.
+        /// This method writes out .gitattribute and .gitignore files if they do not exist,
+        /// and then pushes new or updated files to GitHub.
+        /// </summary>
+		public static void GithubPush()
 		{
-			// Search for .jar files in the directory
-			string[] jarFiles = Directory.GetFiles(GetObjectsFolder(), "*.jar");
+			string projectPath = Utils.GetProjectFolder();
 
-			// Return the first .jar filename if found, otherwise return null
-			return jarFiles.Length > 0 ? Path.GetFileName(jarFiles[0]) : null;
-		}
+			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
-		/// <summary>
-		/// Gets the path of the Files folder.
-		/// </summary>
-		/// <returns>The path of the Files folder.</returns>
-		/// <remarks>
-		/// This method returns the path of the Files folder, which is located in the same directory as the Objects folder.
-		/// </remarks>
-		private static string GetFilesFolder()
-		{
-			string Files = Path.GetDirectoryName(GetObjectsFolder());
-			return Path.Combine(Files, "Files");
-		}
+			string githubAPIKey = Utils.GetGitHubAPIKeyFromInstallFolder();
+			string[] githubIgnore = Utils.GetGitHubIgnoreArray();
 
-		/// <summary>
-		/// Gets the current working directory of the application.
-		/// </summary>
-		/// <returns>The path of the current working directory.</returns>
-		private static string GetObjectsFolder()
-		{
-			return Directory.GetCurrentDirectory();
-		}
+			string githubRepoName = Utils.GetProjectConfigValue("github_repository_name");
+			string githubRepoOwner = Utils.GetProjectConfigValue("github_repository_owner");
+			string githubBranchName = Utils.GetProjectConfigValue("github_branch");			
 
-		/// <summary>
-		/// Gets the path of the project folder.
-		/// </summary>
-		/// <returns>The path of the project folder.</returns>
-		private static string GetProjectFolder()
-		{
-			return Path.GetDirectoryName(GetObjectsFolder());
-		}
+			Console.WriteLine(" ");
+			Console.WriteLine(" - Repository Name: " + githubRepoName);
+			Console.WriteLine(" - Repository Owner: " + githubRepoOwner);
+			Console.WriteLine(" - Branch: " + githubBranchName);
 
-		/// <summary>
-		/// Retrieves the name of the project file in the project folder.
-		/// </summary>
-		/// <returns>The project name without the file extension, or "unknown" if no project file is found.</returns>
-		/// <remarks>
-		/// This method searches for files with the ".b4?" extension in the project folder and returns the name of the first match found.
-		/// If no such files are present, it defaults to returning "unknown".
-		/// </remarks>
-		private static string GetProjectName()
-		{
-			string[] projectFiles = Directory.GetFiles(GetProjectFolder(), "*.b4?");
-			string project = null;
-			if (projectFiles.Length > 0) project = Path.GetFileName(projectFiles[0]);
-			if (project != null) return project.Substring(0, project.LastIndexOf("."));
-			return "unknown";
-		}
+			bool result = GitHub.CheckIfRepositoryExists(githubAPIKey, githubRepoOwner, githubRepoName);
 
-		/// <summary>
-		/// Copies a file to a destination file.
-		/// </summary>
-		/// <param name="sourceFile">The path of the file to copy.</param>
-		/// <param name="destinationFile">The path of the file to copy to.</param>
-		/// <remarks>
-		/// If the destination directory does not exist, it is created.
-		/// If a file with the same name already exists at the destination, it is overwritten.
-		/// </remarks>
-		private static void CopyFile(string sourceFile, string destinationFile)
-		{
-			string destinationDir = Path.GetDirectoryName(destinationFile);
-
-			if (!string.IsNullOrEmpty(destinationDir) && !Directory.Exists(destinationDir))
+			if (!result)
 			{
-				Directory.CreateDirectory(destinationDir);
+				Console.WriteLine(" ");
+				Console.WriteLine("ERROR: GitHub Repo does not exist or credentials are invalid.");
+				Console.WriteLine(" ");
+				Environment.Exit(1);
 			}
 
-			File.Copy(sourceFile, destinationFile, overwrite: true);
-		}
+			Dictionary<string, string> filesGitHub = GitHub.GetFileList(githubAPIKey, githubRepoOwner, githubRepoName, githubBranchName);			
+
+			string[] files = Utils.GetFilesRecursively(Utils.GetProjectFolder());
+
+			foreach (string file in files)
+			{
+				
+				if (Utils.ShouldExclude(file, githubIgnore))
+				{					
+					//Console.WriteLine("Ignoring: " + file);
+					continue;
+				}				
+
+				Console.WriteLine(" ");
+				Console.WriteLine("Processing: " + file);
+
+				string sha = GitHub.CalculateLocalFileSHA256(Path.Combine(Utils.GetProjectFolder(), file));
+
+				string existing_sha = null;
+				if (filesGitHub.ContainsKey(file)) existing_sha = filesGitHub[file];
+
+				if (existing_sha == null)
+				{
+					Console.WriteLine(" - Not in GitHub.");
+					Console.WriteLine(" - Uploading to GitHub.");
+					bool result1 = GitHub.UploadFile(githubAPIKey, githubRepoOwner, githubRepoName, githubBranchName, file, "Initial commit", null);
+					if (result1 == true)
+					{
+						Console.WriteLine(" - OK");
+					}
+					else
+					{
+						Console.WriteLine(" - Upload failed.");
+						continue;
+					}
+				}
+				else
+				{
+					if (existing_sha != sha)
+					{
+						Console.WriteLine(" - Exists in GitHub.");
+						Console.WriteLine(" - Updating GitHub.");
+						bool result2 = GitHub.UploadFile(githubAPIKey, githubRepoOwner, githubRepoName, githubBranchName, file, "Update", existing_sha);
+						if (result2 == true)
+						{
+							Console.WriteLine(" - OK");
+						}
+						else
+						{
+							Console.WriteLine(" - Upload failed.");
+							continue;
+						}
+					}
+					else
+					{
+						Console.WriteLine(" - Exists in GitHub.");
+						Console.WriteLine(" - No changes (Local = GitHub).");
+						Console.WriteLine(" - OK");
+					}
+				}
+			}
+
+			//Delete any files that are no longer in the project
+			foreach (string file in filesGitHub.Keys)
+			{
+				if (!files.Contains(file) && file != "README.md")
+				{
+					Console.WriteLine(" ");
+					Console.WriteLine("Processing: " + file);
+					Console.WriteLine(" - Not in project.");
+					Console.WriteLine(" - Deleting from GitHUb.");
+					bool result3 = GitHub.DeleteFile(githubAPIKey, githubRepoOwner, githubRepoName, githubBranchName, file, filesGitHub[file]);
+					if (result3 == true)
+					{
+						Console.WriteLine(" - OK");
+					}
+					else
+					{
+						Console.WriteLine(" - Delete failed.");
+						continue;
+					}
+				}
+			}
+
+			Console.WriteLine(" ");
+
+			Environment.Exit(0);
+		}		
 
 		/// <summary>
 		/// Moves all B4A AutoBackup zip files to a specified destination directory.
@@ -458,9 +547,9 @@ namespace B4XCustomActions
 		{
 			try
 			{
-				string sourceDir = Path.Combine(GetProjectFolder(), "AutoBackups");
+				string sourceDir = Path.Combine(Utils.GetProjectFolder(), "AutoBackups");
 
-				destinationDir = Path.Combine(destinationDir, GetProjectName());
+				destinationDir = Path.Combine(destinationDir, Utils.GetProjectName());
 
 				if (!Directory.Exists(destinationDir))
 				{
@@ -492,43 +581,83 @@ namespace B4XCustomActions
 				Environment.Exit(1);
 			}
 
-		}
+		}		
 
-		/// <summary>
-		/// Copy all files and subdirectories from the source directory to the destination directory.
-		/// If the destination directory does not exist, it will be created.
-		/// All files in the source directory will be copied to the destination directory.
-		/// All subdirectories in the source directory will be copied to the destination directory
-		/// using a recursive call to this method.
-		/// </summary>
-		/// <param name="sourceDir">The source directory to copy from.</param>
-		/// <param name="destinationDir">The destination directory to copy to.</param>
-		private static void CopyDirectory(string sourceDir, string destinationDir)
+        /// <summary>
+        /// Replaces all occurrences of a specified string in a file with another string.
+        /// </summary>
+        /// <param name="sourceFile">The file to search and replace in. If the file path is relative, it will be resolved relative to the project folder.</param>
+        /// <param name="find">The string to search for and replace.</param>
+        /// <param name="replace">The string to replace the search string with. If the string is a file path, the contents of the file will be used.</param>
+        /// <remarks>
+        /// The method will exit the program with a status code of 0 if no errors occur, or 1 if an error occurs.
+        /// </remarks>
+		private static void FindAndReplaceText(string sourceFile, string find, string replace)
 		{
-			// Create destination directory if it does not exist
-			if (!Directory.Exists(destinationDir))
+			sourceFile = Utils.ResolvePath(sourceFile);
+
+			Console.WriteLine(sourceFile);
+			Console.WriteLine(find);
+			Console.WriteLine(replace);
+
+			if (!File.Exists(sourceFile))
 			{
-				Directory.CreateDirectory(destinationDir);
+				Console.WriteLine("Source file does not exist (" + sourceFile + ")");
+				Environment.Exit(1);
 			}
 
-			// Copy all files in the source directory
-			foreach (string file in Directory.GetFiles(sourceDir))
-			{
-				string destinationFile = Path.Combine(destinationDir, Path.GetFileName(file));
-				File.Copy(file, destinationFile, overwrite: true);
-			}
+			string input = File.ReadAllText(sourceFile);
 
-			// Recursively copy all subdirectories
-			foreach (string directory in Directory.GetDirectories(sourceDir))
+			if (File.Exists(replace)) replace = File.ReadAllText(replace);
+
+			//temp_text = temp_text.Replace(find,replace);
+
+			string temp_text = string.Join("\n", input.Split('\n').Select(line =>
 			{
-				string destinationSubDir = Path.Combine(destinationDir, Path.GetFileName(directory));
-				CopyDirectory(directory, destinationSubDir);
-			}
+				if (line.Trim().StartsWith("#CustomBuildAction"))
+				{
+					return line; // Keep the line unchanged
+				}
+				return line.Replace(find, replace); // Replace
+			}));
+
+			File.WriteAllText(sourceFile, temp_text);
+
+			Environment.Exit(0);
 		}
 
 
+		static void WriteJarChecksum(string destinationPath)
+		{
+			try
+			{
+				String jar = Utils.FindJar();
 
+				if (destinationPath == "") destinationPath = Utils.GetObjectsFolder();
+
+				Console.WriteLine("Writing checksum for  " + jar + " to " + destinationPath);
+
+				if (jar != null)
+				{
+					string CheckSum = Utils.GetSHA256Hash(jar);
+
+					Console.WriteLine(CheckSum);
+
+					if (Directory.Exists(destinationPath))
+					{
+						destinationPath = Path.Combine(destinationPath, jar.Replace(".jar", "") + "_checksum.txt");
+					}
+					File.WriteAllText(destinationPath, CheckSum);
+
+				}
+				Environment.Exit(0);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("An error occurred: " + ex.Message);
+				Console.WriteLine("destinationPath: " + destinationPath);
+				Environment.Exit(1);
+			}
+		}
 	}
 }
-
-
