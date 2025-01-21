@@ -423,6 +423,9 @@ namespace B4XCustomActions
 			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
 			string githubAPIKey = Utils.GetGitHubAPIKeyFromInstallFolder();
+
+			Utils.CreateGitAttributeFileIfNotExist();
+
 			string[] githubIgnore = Utils.GetGitHubIgnoreArray();
 
 			string githubRepoName = Utils.GetProjectConfigValue("github_repository_name");
