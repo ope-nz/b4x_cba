@@ -151,8 +151,13 @@ b4x_cba will push the project to a GitHub repository.
 
 > [!NOTE]
 > This action uses GitHub REST so it doesnt require any other software
+> 
 > It uses an API key for authetication
+> 
 > You need to add config to the project attributes region of your project eg
+> 
 > 'github_repository_owner=ope-nz
+> 
 > 'github_repository_name=deleteme
+> 
 > 'github_branch=dev
