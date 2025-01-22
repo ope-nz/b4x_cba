@@ -11,7 +11,7 @@ b4x_cba is a C# console application that contains a collection of utility action
 - updateversion - maintains a version.txt file with incrementing version number
 - zip - zips a file or folder
 - moveautobackups - moves auto backup files to another directory
-- checksum - writes a SHA256 checksum of the jar file to a text file
+- jarchecksum - writes a SHA256 checksum of the jar file to a text file
 - githubpush - pushes the project code to a GitHub repo
 
 # Setup;
@@ -109,14 +109,14 @@ b4x_cba will move all auto backup files from the projects "AutoBackups" folder t
 
 `#CustomBuildAction: 2, b4x_cba.exe, -action moveautobackups -destination D:\Temp`
 
-## checksum
+## jarchecksum
 
 b4x_cba will calulate a SHA256 checksum of the output jar file and write it to a text file
 
 > [!NOTE]
 > If the destination is a folder then the jar name will be used for the checksum eg example.jar will result in example_checksum.txt
 
-`#CustomBuildAction: 2, b4x_cba.exe, -action checksum -destination D:\Release`
+`#CustomBuildAction: 2, b4x_cba.exe, -action jarchecksum -destination D:\Release`
 
 ## githubpush
 
