@@ -73,7 +73,7 @@ namespace B4XCustomActions
             if (directory != null)
             {
                 fileUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + directory + "?ref=" + branch;
-            }
+            }            
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(fileUrl);
             request.Method = "GET";
@@ -98,20 +98,25 @@ namespace B4XCustomActions
                     response.Close();
 
                     JavaScriptSerializer serializer = new JavaScriptSerializer();
-                    var files = serializer.Deserialize<List<GitHubFile>>(json);
+                    var files = serializer.Deserialize<List<GitHubFile>>(json);                    
 
                     // Populate dictionary with file name and sha
                     foreach (var file in files)
                     {
                         if (file.type == "dir")
-                        {
-                            string dir = file.name;
-                            Dictionary<string, string> filesDictionarySub = GetFileList(apiKey, owner, repo, branch, dir);
-                            foreach (KeyValuePair<string, string> kvp in filesDictionarySub) { filesDictionary[Path.Combine(dir, kvp.Key)] = kvp.Value; }
+                        {           
+                            string thisdir = file.name;
+                            string nextdir = file.name;
+                            if (directory != null) nextdir = directory + "/"+ nextdir;
+                            Dictionary<string, string> filesDictionarySub = GetFileList(apiKey, owner, repo, branch, nextdir);
+                            foreach (KeyValuePair<string, string> kvp in filesDictionarySub) {
+                                filesDictionary[thisdir + "/" +kvp.Key] = kvp.Value;
+                            }
                         }
                         else
                         {
-                            filesDictionary[file.name] = file.sha;
+                            string filePath = file.name;
+                            filesDictionary[filePath] = file.sha;
                         }
                     }
 
@@ -125,7 +130,8 @@ namespace B4XCustomActions
             }
             catch (Exception ex)
             {
-                Console.WriteLine("An error occurred: " + ex.Message);
+                Console.WriteLine("GetFileList - An error occurred: " + ex.Message);
+                Console.WriteLine(fileUrl);
                 return filesDictionary;
             }
         }
@@ -150,6 +156,8 @@ namespace B4XCustomActions
         public static bool DeleteFile(string apiKey, string owner, string repo, string branch, string filePath, string sha)
         {
             string fileUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + filePath + "?ref=" + branch;
+
+            Console.WriteLine("Deleting " + fileUrl);
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(fileUrl);
             request.Method = "DELETE";

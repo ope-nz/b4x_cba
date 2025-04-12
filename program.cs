@@ -8,6 +8,8 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
+using Vestris.ResourceLib;
 
 namespace B4XCustomActions
 {
@@ -34,6 +36,10 @@ namespace B4XCustomActions
 				string TFind = "";
 				string TReplace = "";
 				string TMessage = "";
+				string TIcon = "";
+				string TExe = "";
+				string TKey = "";
+				string TValue = "";
 
 				// Loop through arguments
 				for (int n = 0; n < c; n++)
@@ -50,7 +56,7 @@ namespace B4XCustomActions
 					{
 						case "-echo":
 							TAction = thisVal;
-							break;	
+							break;
 						case "-action":
 							TAction = thisVal;
 							break;
@@ -74,6 +80,18 @@ namespace B4XCustomActions
 							break;
 						case "-message":
 							TMessage = thisVal;
+							break;
+						case "-exe":
+							TExe = thisVal;
+							break;
+						case "-icon":
+							TIcon = thisVal;
+							break;
+						case "-key":
+							TKey = thisVal;
+							break;
+						case "-value":
+							TValue = thisVal;
 							break;
 					}
 				}
@@ -105,9 +123,9 @@ namespace B4XCustomActions
 						Console.WriteLine("Copy");
 						CopyPath(TSource, TDestination);
 						break;
-					case "buildtime":
-						Console.WriteLine("Build Time");
-						BuildTime(TDateFormat, TTimeFormat);
+					case "updatebuild":
+						Console.WriteLine("Update Build");
+						UpdateBuild(TDateFormat, TTimeFormat);
 						break;
 					case "updateversion":
 						Console.WriteLine("Update Version");
@@ -132,6 +150,18 @@ namespace B4XCustomActions
 					case "jarchecksum":
 						Console.WriteLine("SHA256");
 						WriteJarChecksum(TDestination);
+						break;
+					case "cleanmodules":
+						Console.WriteLine("Clean Modules");
+						CleanModules();
+						break;
+					case "setexeicon":
+						Console.WriteLine("Set Exe Icon");
+						SetExeIcon(TExe, TIcon);
+						break;
+					case "setexefileinfo":
+						Console.WriteLine("Set Exe File Info");
+						SetExeFileInfo(TExe, TKey, TValue);
 						break;
 					default:
 						Console.WriteLine("No action supplied");
@@ -178,7 +208,7 @@ namespace B4XCustomActions
 		/// <param name="DateFormat">The format string for the date part of the DateTime object.</param>
 		/// <param name="TimeFormat">The format string for the time part of the DateTime object.</param>
 		/// <remarks>If a file with the same name already exists, it will be overwritten.</remarks>
-		private static void BuildTime(string DateFormat, string TimeFormat)
+		private static void UpdateBuild(string DateFormat, string TimeFormat)
 		{
 			// Define the desired format for the DateTime string
 			string dateFormat = DateFormat + " " + TimeFormat;
@@ -411,11 +441,11 @@ namespace B4XCustomActions
 			}
 		}
 
-        /// <summary>
-        /// Pushes the current project to GitHub.
-        /// This method writes out .gitattribute and .gitignore files if they do not exist,
-        /// and then pushes new or updated files to GitHub.
-        /// </summary>
+		/// <summary>
+		/// Pushes the current project to GitHub.
+		/// This method writes out .gitattribute and .gitignore files if they do not exist,
+		/// and then pushes new or updated files to GitHub.
+		/// </summary>
 		public static void GithubPush()
 		{
 			string projectPath = Utils.GetProjectFolder();
@@ -430,12 +460,33 @@ namespace B4XCustomActions
 
 			string githubRepoName = Utils.GetProjectConfigValue("github_repository_name");
 			string githubRepoOwner = Utils.GetProjectConfigValue("github_repository_owner");
-			string githubBranchName = Utils.GetProjectConfigValue("github_branch");			
+			string githubBranchName = Utils.GetProjectConfigValue("github_branch");
+
+			// If the user did not specify a repository owner, try read it from a file
+			if (githubRepoOwner == null && File.Exists(Path.Combine(Utils.GetInstallFolder(), "github_repository_owner.txt")))
+			{
+				githubRepoOwner = File.ReadAllText(Path.Combine(Utils.GetInstallFolder(), "github_repository_owner.txt")).Trim();
+			}
+
+			// If the user did not specify a repository name, use the project name
+			if (githubRepoName == null) githubRepoName = Utils.GetProjectName();
+
+			// If the user did not specify a branch name, use "main"
+			if (githubBranchName == null) githubBranchName = "main";
 
 			Console.WriteLine(" ");
+			Console.WriteLine("Using Config:");
 			Console.WriteLine(" - Repository Name: " + githubRepoName);
 			Console.WriteLine(" - Repository Owner: " + githubRepoOwner);
 			Console.WriteLine(" - Branch: " + githubBranchName);
+
+			if (githubRepoOwner == null)
+			{
+				Console.WriteLine(" ");
+				Console.WriteLine("ERROR: GitHub Repo Owner not set.");
+				Console.WriteLine(" ");
+				Environment.Exit(1);
+			}
 
 			bool result = GitHub.CheckIfRepositoryExists(githubAPIKey, githubRepoOwner, githubRepoName);
 
@@ -447,26 +498,28 @@ namespace B4XCustomActions
 				Environment.Exit(1);
 			}
 
-			Dictionary<string, string> filesGitHub = GitHub.GetFileList(githubAPIKey, githubRepoOwner, githubRepoName, githubBranchName);			
+			Dictionary<string, string> remotefiles = GitHub.GetFileList(githubAPIKey, githubRepoOwner, githubRepoName, githubBranchName);
 
-			string[] files = Utils.GetFilesRecursively(Utils.GetProjectFolder());
+			string[] localfiles = Utils.GetFilesRecursively(Utils.GetProjectFolder());
 
-			foreach (string file in files)
+			foreach (string file in localfiles)
 			{
-				
 				if (Utils.ShouldExclude(file, githubIgnore))
-				{					
+				{
 					//Console.WriteLine("Ignoring: " + file);
 					continue;
-				}				
+				}
 
 				Console.WriteLine(" ");
-				Console.WriteLine("Processing: " + file);
+				Console.WriteLine("Processing (Local): " + file);
+
+				string filec = file.Replace("\\", "/");
 
 				string sha = GitHub.CalculateLocalFileSHA256(Path.Combine(Utils.GetProjectFolder(), file));
 
 				string existing_sha = null;
-				if (filesGitHub.ContainsKey(file)) existing_sha = filesGitHub[file];
+
+				if (remotefiles.ContainsKey(filec)) existing_sha = remotefiles[filec];
 
 				if (existing_sha == null)
 				{
@@ -510,15 +563,18 @@ namespace B4XCustomActions
 			}
 
 			//Delete any files that are no longer in the project
-			foreach (string file in filesGitHub.Keys)
+			foreach (string file in remotefiles.Keys)
 			{
-				if (!files.Contains(file) && file != "README.md")
+				string filec = file.Replace("/", "\\");
+
+				if (!localfiles.Contains(filec) && filec != "README.md")
 				{
 					Console.WriteLine(" ");
-					Console.WriteLine("Processing: " + file);
+					Console.WriteLine("Processing (Remote): " + filec);
 					Console.WriteLine(" - Not in project.");
-					Console.WriteLine(" - Deleting from GitHUb.");
-					bool result3 = GitHub.DeleteFile(githubAPIKey, githubRepoOwner, githubRepoName, githubBranchName, file, filesGitHub[file]);
+					Console.WriteLine(" - Deleting from GitHub.");
+
+					bool result3 = GitHub.DeleteFile(githubAPIKey, githubRepoOwner, githubRepoName, githubBranchName, file, remotefiles[filec]);
 					if (result3 == true)
 					{
 						Console.WriteLine(" - OK");
@@ -526,6 +582,8 @@ namespace B4XCustomActions
 					else
 					{
 						Console.WriteLine(" - Delete failed.");
+						Console.WriteLine(file);
+						Console.WriteLine(remotefiles[file]);
 						continue;
 					}
 				}
@@ -533,8 +591,12 @@ namespace B4XCustomActions
 
 			Console.WriteLine(" ");
 
+			Console.WriteLine("GitHub Push Completed Successfully");
+
+			Console.WriteLine(" ");
+
 			Environment.Exit(0);
-		}		
+		}
 
 		/// <summary>
 		/// Moves all B4A AutoBackup zip files to a specified destination directory.
@@ -584,17 +646,17 @@ namespace B4XCustomActions
 				Environment.Exit(1);
 			}
 
-		}		
+		}
 
-        /// <summary>
-        /// Replaces all occurrences of a specified string in a file with another string.
-        /// </summary>
-        /// <param name="sourceFile">The file to search and replace in. If the file path is relative, it will be resolved relative to the project folder.</param>
-        /// <param name="find">The string to search for and replace.</param>
-        /// <param name="replace">The string to replace the search string with. If the string is a file path, the contents of the file will be used.</param>
-        /// <remarks>
-        /// The method will exit the program with a status code of 0 if no errors occur, or 1 if an error occurs.
-        /// </remarks>
+		/// <summary>
+		/// Replaces all occurrences of a specified string in a file with another string.
+		/// </summary>
+		/// <param name="sourceFile">The file to search and replace in. If the file path is relative, it will be resolved relative to the project folder.</param>
+		/// <param name="find">The string to search for and replace.</param>
+		/// <param name="replace">The string to replace the search string with. If the string is a file path, the contents of the file will be used.</param>
+		/// <remarks>
+		/// The method will exit the program with a status code of 0 if no errors occur, or 1 if an error occurs.
+		/// </remarks>
 		private static void FindAndReplaceText(string sourceFile, string find, string replace)
 		{
 			sourceFile = Utils.ResolvePath(sourceFile);
@@ -613,11 +675,9 @@ namespace B4XCustomActions
 
 			if (File.Exists(replace)) replace = File.ReadAllText(replace);
 
-			//temp_text = temp_text.Replace(find,replace);
-
 			string temp_text = string.Join("\n", input.Split('\n').Select(line =>
 			{
-				if (line.Trim().StartsWith("#CustomBuildAction"))
+				if (line.Trim().StartsWith("#CustomBuildAction") || line.Trim().Contains("ide:"))
 				{
 					return line; // Keep the line unchanged
 				}
@@ -628,7 +688,6 @@ namespace B4XCustomActions
 
 			Environment.Exit(0);
 		}
-
 
 		static void WriteJarChecksum(string destinationPath)
 		{
@@ -661,6 +720,134 @@ namespace B4XCustomActions
 				Console.WriteLine("destinationPath: " + destinationPath);
 				Environment.Exit(1);
 			}
+		}
+
+
+
+		/// <summary>
+		/// Cleans up unused .bas files from the project folder.
+		/// </summary>
+		/// <remarks>
+		/// This method reads the project file and extracts the names of all .bas files.
+		/// It then compares this list with the list of all .bas files in the project folder.
+		/// Any .bas files that are not in the project file are deleted.
+		/// The method will exit the program with a status code of 0 if no errors occur, or 1 if an error occurs.
+		/// </remarks>
+		static void CleanModules()
+		{
+			try
+			{
+				string projectFilePath = Utils.GetProjectPath();
+				string projectFolder = Utils.GetProjectFolder();
+
+				// Read all lines from the project file
+				string[] projectContent = File.ReadAllLines(projectFilePath);
+
+				// Parse project file to extract .bas file names
+				HashSet<string> projectFiles = new HashSet<string>();
+				foreach (string line in projectContent)
+				{
+					if (!line.StartsWith("Module")) continue;
+					string[] parts = line.Split('=');
+
+					if (parts.Length != 2) continue;
+
+					string fileName = parts[1].Trim();
+
+					if (fileName.Contains("\\") || fileName.Contains("|")) continue;
+
+					projectFiles.Add(fileName + ".bas");
+				}
+
+				// List all .bas files in the folder
+				string[] basFiles = Directory.GetFiles(projectFolder, "*.bas");
+
+				string toDelete = "";
+
+				foreach (string basFilePath in basFiles)
+				{
+					string basFileName = Path.GetFileName(basFilePath);
+
+					if (!projectFiles.Contains(basFileName))
+					{
+						toDelete += basFileName + "\n";
+					}
+				}
+
+				if (toDelete != "")
+				{
+					DialogResult result = MessageBox.Show("Do you want to recycle the following files?\n\n" + toDelete, "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+					if (result == DialogResult.Yes)
+					{
+						foreach (string basFilePath in basFiles)
+						{
+							string basFileName = Path.GetFileName(basFilePath);
+
+							// Delete .bas files not in project.txt
+							if (!projectFiles.Contains(basFileName))
+							{
+								Console.WriteLine(" - Sending to Recycle Bin: " + basFileName);
+								RecycleBin.DeleteFileToRecycleBin(Path.Combine(projectFolder, basFileName));
+							}
+						}
+					}
+				}
+
+				Console.WriteLine("Tidy Modules Complete.");
+				Environment.Exit(0);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("An error occurred: " + ex.Message);
+				Environment.Exit(1);
+			}
+		}
+
+		static void SetExeIcon(string exePath, string iconPath)
+		{
+			try
+			{
+				IconFile iconFile = new IconFile(iconPath);
+				IconDirectoryResource iconDirectory = new IconDirectoryResource(iconFile);
+				iconDirectory.SaveTo(exePath);
+				Console.WriteLine("Icon Replace Complete.");
+				Environment.Exit(0);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("An error occurred: " + ex.Message);
+				Environment.Exit(1);
+			}
+
+		}
+
+		static void SetExeFileInfo(string exePath, string key, string value)
+		{
+			try
+			{
+				VersionResource versionResource = new VersionResource();
+				versionResource.Language = ResourceUtil.NEUTRALLANGID;
+        		versionResource.LoadFrom(exePath);
+
+				//StringFileInfo stringFileInfo = versionResource[stringFileInfo: true] as StringFileInfo;
+				StringFileInfo stringFileInfo = (StringFileInfo)versionResource["StringFileInfo"];
+				stringFileInfo[key] = value;
+
+				versionResource.SaveTo(exePath);
+
+				// Optionally, set numeric version too
+        		//versionResource.FileVersion = new Version(1, 2, 3, 4);
+        		//versionResource.ProductVersion = new Version(1, 2, 3, 4);
+				
+				Console.WriteLine("File Info Replace Complete.");
+				Environment.Exit(0);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("An error occurred: " + ex.Message);
+				Environment.Exit(1);
+			}        
 		}
 	}
 }

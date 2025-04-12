@@ -137,7 +137,9 @@ namespace B4XCustomActions
 
                 if (idx2 > 0)
                 {
-                    return projectContent.Substring(idx1, idx2 - idx1).Trim();
+                    string thisVal = projectContent.Substring(idx1, idx2 - idx1).Trim();
+                    if (thisVal.Contains("%")) thisVal = ResolveVariables(thisVal);
+                    return thisVal;
                 }
             }
 
@@ -488,7 +490,6 @@ namespace B4XCustomActions
             // If no extension, it's likely a directory
             return string.IsNullOrEmpty(Path.GetExtension(path));
         }
-
 
     }
 }
